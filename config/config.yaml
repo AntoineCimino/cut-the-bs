@@ -1,0 +1,4 @@
+synthesis:
+  backend: claude_cli
+  model: sonnet
+  timeout_seconds: 300
