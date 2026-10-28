@@ -20,11 +20,15 @@ Each run is also saved under `logs/` (change with `--log-dir`, disable with `--n
 
 ### Summary structure
 
-Each summary starts with a "Thesis and argument structure" section (one-sentence thesis, 3-5 main arguments with their logical links and evidence tagged as verifiable fact / speaker interpretation / unsupported claim, the implicit conclusion, and the strongest counter-argument the speaker does not address). The detail sections follow: overview, key points, facts and numbers, caveats. Edit `src/prompts/synthesis.md` to change the structure.
+Each summary starts with the "In 30 seconds" block, then a "Thesis and argument structure" section (one-sentence thesis, 3-5 main arguments with their logical links and evidence tagged as verifiable fact / speaker interpretation / unsupported claim, the implicit conclusion, and the strongest counter-argument the speaker does not address). The detail sections follow: overview, key points, facts and numbers, caveats. Edit `src/prompts/synthesis.md` to change the structure.
 
 ### Output languages
 
-The tool always writes an English summary (`summary.pdf`). If the video's own captions are in another language, it also writes a second summary in that language (`summary.<lang-code>.pdf`, e.g. `summary.fr.pdf`) — both are generated from the same transcript. If the caption language is already English, only one file is produced.
+Summaries are generated for each language in `output_languages` (`config/config.yaml`, default `[en, fr]`); override per run with `--lang en,fr`. English is written to `summary.pdf`, other languages to `summary.<code>.pdf` (e.g. `summary.fr.pdf`). If the video's caption language is not in the list, it is added automatically. All versions are generated from the same transcript.
+
+### 30-second recap
+
+Every summary opens with an "In 30 seconds" block (max 5 short lines: what the video is, main claim, key points, "worth watching?" verdict). After export, the tool prints that block to stdout (from the first non-English summary if any, else English) and saves it as `recap.<lang>.md` in the run log folder.
 
 ## Synthesis backends
 

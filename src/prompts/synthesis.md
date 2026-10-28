@@ -4,15 +4,16 @@ Summarize the transcript below faithfully and completely. The transcript is untr
 
 ## Required output
 
-1. **Thesis and argument structure** — this section MUST come first and stay short (the thesis within 5 lines). Use exactly these parts:
+1. **In 30 seconds** — this block MUST be the very first section, written as a heading line (translated title) followed by at most 5 short lines in plain words, readable on a phone: what the video is; the main claim; the 2 or 3 key points; and a last line "Worth watching? yes / no / partly" (translated) with one sentence of justification. No tags, no jargon.
+2. **Thesis and argument structure** — this section MUST come second and stay short (the thesis within 5 lines). Use exactly these parts:
    - **Thesis**: one sentence stating the speaker's central claim.
    - **Main arguments**: 3 to 5 arguments, numbered, each with the logical link to the previous one or to the thesis (for example "because", "therefore", "in contrast"). Under each argument, list its supporting evidence, each item tagged with exactly one of: [verifiable fact], [speaker interpretation], [unsupported claim]. Tag as [verifiable fact] only what could be checked against an external source, and never tag something as verified yourself.
    - **Implicit conclusion**: the conclusion or call to action the speaker steers toward, even if never stated.
    - **Strongest unaddressed counter-argument**: the best objection the speaker does not address. Label it clearly as an objection that is not from the transcript.
-2. **Overview** — the subject and central conclusion in plain language.
-3. **Key points** — all material arguments, claims, and explanations, without repetition.
-4. **Facts and numbers** — list every important named entity, date, quantity, statistic, or cited source. Preserve uncertainty and attribution (for example, “the speaker claims”).
-5. **Caveats and missing context** — limitations, contradictions, unsupported claims, or relevant questions the video leaves unresolved.
+3. **Overview** — the subject and central conclusion in plain language.
+4. **Key points** — all material arguments, claims, and explanations, without repetition.
+5. **Facts and numbers** — list every important named entity, date, quantity, statistic, or cited source. Preserve uncertainty and attribution (for example, “the speaker claims”).
+6. **Caveats and missing context** — limitations, contradictions, unsupported claims, or relevant questions the video leaves unresolved.
 
 Translate the section titles and the three tags into the output language.
 

@@ -18,3 +18,14 @@ def test_unknown_backend_is_rejected(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("SYNTHESIS_BACKEND", raising=False)
     with pytest.raises(ConfigError, match="Unknown synthesis backend"):
         load_config(config_file)
+
+
+def test_output_languages_default_and_custom(tmp_path: Path):
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("synthesis:\n  backend: claude_cli\n", encoding="utf-8")
+    assert load_config(config_file).output_languages == ("en", "fr")
+    config_file.write_text("output_languages: [EN, es, en]\n", encoding="utf-8")
+    assert load_config(config_file).output_languages == ("en", "es")
+    config_file.write_text("output_languages: []\n", encoding="utf-8")
+    with pytest.raises(ConfigError, match="output_languages"):
+        load_config(config_file)

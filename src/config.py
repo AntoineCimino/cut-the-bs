@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = PROJECT_ROOT / "config" / "config.yaml"
+DEFAULT_OUTPUT_LANGUAGES = ("en", "fr")
 SUPPORTED_BACKENDS = {"claude_cli", "anthropic_api", "fcc_claude"}
 
 
@@ -28,6 +29,7 @@ class SynthesisConfig:
 @dataclass(frozen=True)
 class AppConfig:
     synthesis: SynthesisConfig
+    output_languages: tuple[str, ...] = DEFAULT_OUTPUT_LANGUAGES
 
 
 def load_config(path: Path | None = None) -> AppConfig:
@@ -52,4 +54,9 @@ def load_config(path: Path | None = None) -> AppConfig:
         raise ConfigError("SYNTHESIS_TIMEOUT_SECONDS must be an integer.") from exc
     if timeout <= 0:
         raise ConfigError("Synthesis timeout must be greater than zero.")
-    return AppConfig(SynthesisConfig(backend, str(model), timeout))
+    languages = raw.get("output_languages", list(DEFAULT_OUTPUT_LANGUAGES))
+    if isinstance(languages, str):
+        languages = [languages]
+    if not isinstance(languages, list) or not languages or not all(isinstance(c, str) and c.strip() for c in languages):
+        raise ConfigError("'output_languages' must be a non-empty list of language codes (e.g. [en, fr]).")
+    return AppConfig(SynthesisConfig(backend, str(model), timeout), tuple(dict.fromkeys(c.strip().lower() for c in languages)))

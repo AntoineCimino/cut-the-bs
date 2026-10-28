@@ -2,3 +2,7 @@ synthesis:
   backend: claude_cli
   model: sonnet
   timeout_seconds: 300
+
+# Languages of the generated summaries ("en" -> summary.pdf, others -> summary.<code>.pdf).
+# The video's own caption language is added automatically when not listed.
+output_languages: [en, fr]

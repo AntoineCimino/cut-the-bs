@@ -31,7 +31,7 @@ def test_prompt_puts_thesis_section_first_in_all_languages():
     for language in ("English", "French"):
         prompt = synthesis._build_prompt("Invented transcript.", language)
         assert f"in {language}" in prompt
-        order = ["Thesis and argument structure", "Overview", "Key points", "Facts and numbers", "Caveats"]
+        order = ["In 30 seconds", "Thesis and argument structure", "Overview", "Key points", "Facts and numbers", "Caveats"]
         positions = [prompt.index(title) for title in order]
         assert positions == sorted(positions)
         for needle in ("[verifiable fact]", "[speaker interpretation]", "[unsupported claim]",
