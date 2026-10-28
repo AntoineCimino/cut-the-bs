@@ -8,6 +8,7 @@ instead of dumping flat escaped lines.
 from __future__ import annotations
 
 import re
+import unicodedata
 from datetime import date
 from html import escape
 from pathlib import Path
@@ -27,22 +28,40 @@ from reportlab.platypus import (
     Spacer,
 )
 
-# Register DejaVuSans if available (supports Unicode, including accented characters).
-# Falls back to Helvetica if not found, which limits Unicode support but works.
+# Register DejaVuSans (Unicode, accented characters) with bold/italic variants if available.
+# Falls back to built-in Helvetica family if not found.
 _FONT_NAME = "Helvetica"
 _FONT_NAME_BOLD = "Helvetica-Bold"
+_FONT_NAME_ITALIC = "Helvetica-Oblique"
+_FONT_NAME_BOLD_ITALIC = "Helvetica-BoldOblique"
+_FONT_DIRS = [
+    Path("/usr/share/fonts/truetype/dejavu"),
+    Path("/usr/share/fonts/dejavu"),
+    Path("C:\\Windows\\Fonts"),
+]
 try:
-    from reportlab.pdfbase import ttfonts
-    # Try common system font paths for DejaVuSans (Linux/Windows/macOS)
-    for path in ["/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                  "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                  "C:\\Windows\\Fonts\\DejaVuSans.ttf"]:
-        if Path(path).exists():
-            ttfonts.registerFont(ttfonts.TTFont("DejaVuSans", path))
-            ttfonts.registerFont(ttfonts.TTFont("DejaVuSans-Bold", str(path).replace("DejaVuSans", "DejaVuSans-Bold")))
-            _FONT_NAME = "DejaVuSans"
-            _FONT_NAME_BOLD = "DejaVuSans-Bold"
-            break
+    from reportlab.pdfbase import pdfmetrics, ttfonts
+
+    for _dir in _FONT_DIRS:
+        _files = {
+            "DejaVuSans": _dir / "DejaVuSans.ttf",
+            "DejaVuSans-Bold": _dir / "DejaVuSans-Bold.ttf",
+            "DejaVuSans-Oblique": _dir / "DejaVuSans-Oblique.ttf",
+            "DejaVuSans-BoldOblique": _dir / "DejaVuSans-BoldOblique.ttf",
+        }
+        if not all(f.exists() for f in _files.values()):
+            continue
+        for _name, _file in _files.items():
+            ttfonts.registerFont(ttfonts.TTFont(_name, str(_file)))
+        pdfmetrics.registerFontFamily(
+            "DejaVuSans", normal="DejaVuSans", bold="DejaVuSans-Bold",
+            italic="DejaVuSans-Oblique", boldItalic="DejaVuSans-BoldOblique",
+        )
+        _FONT_NAME = "DejaVuSans"
+        _FONT_NAME_BOLD = "DejaVuSans-Bold"
+        _FONT_NAME_ITALIC = "DejaVuSans-Oblique"
+        _FONT_NAME_BOLD_ITALIC = "DejaVuSans-BoldOblique"
+        break
 except Exception:
     pass  # Fall back to Helvetica if registration fails
 
@@ -65,10 +84,30 @@ _COVER_META = ParagraphStyle("CoverMeta", fontName=_FONT_NAME, fontSize=8.5,
                               leading=12, textColor=_MUTED)
 
 
+def _normalize_glyphs(text: str) -> str:
+    """Replace superscript/subscript/modifier letters with plain equivalents.
+
+    Characters such as "ᵉ" (U+1D49), "ˢ", "ⁿ", "ª", "º" are missing from the PDF
+    font and render as a black square. Their compatibility decomposition
+    (e.g. "37ᵉ" -> "37e") is safe and readable.
+    """
+    out = []
+    for ch in text:
+        if ord(ch) > 0x7F and re.match(r"<(super|sub)>", unicodedata.decomposition(ch)):
+            out.append(unicodedata.normalize("NFKC", ch))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+_HR_RE = re.compile(r"^(?:-{3,}|\*{3,}|_{3,})$")
+
+
 def _inline(text: str) -> str:
-    """Escape then translate **bold** spans to ReportLab <b> tags."""
-    escaped = escape(text)
-    return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
+    """Escape, then translate **bold** and *italic* spans to ReportLab tags."""
+    escaped = escape(_normalize_glyphs(text))
+    bolded = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escaped)
+    return re.sub(r"(?<![*\w])\*(?![\s*])(.+?)(?<![\s*])\*(?![*\w])", r"<i>\1</i>", bolded)
 
 
 def _parse_summary(summary: str, cover_title: str) -> list[Flowable]:
@@ -88,7 +127,11 @@ def _parse_summary(summary: str, cover_title: str) -> list[Flowable]:
         if not line:
             flush_bullets()
             continue
-        if line.startswith("## "):
+        if _HR_RE.match(line):
+            flush_bullets()
+            flowables.append(HRFlowable(width="100%", thickness=0.5, color=_RULE,
+                                         spaceBefore=2 * mm, spaceAfter=3 * mm))
+        elif line.startswith("## "):
             flush_bullets()
             flowables.append(Paragraph(_inline(line[3:].strip()), _H1))
         elif line.startswith("# "):
@@ -114,7 +157,7 @@ def export_pdf(output: Path, *, title: str, source_url: str, generated_on: date,
     output.parent.mkdir(parents=True, exist_ok=True)
 
     story: list[Flowable] = [
-        Paragraph(escape(title), _COVER_TITLE),
+        Paragraph(escape(_normalize_glyphs(title)), _COVER_TITLE),
         Paragraph(f"Source: {escape(source_url)}", _COVER_META),
         Paragraph(f"Generated: {generated_on.isoformat()}", _COVER_META),
         Spacer(1, 3 * mm),
