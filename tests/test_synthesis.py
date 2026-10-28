@@ -25,3 +25,22 @@ def test_anthropic_backend_requires_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     with pytest.raises(synthesis.SynthesisError, match="ANTHROPIC_API_KEY is required"):
         synthesis.synthesize("Invented transcript.", SynthesisConfig(backend="anthropic_api"))
+
+
+def test_prompt_puts_thesis_section_first_in_all_languages():
+    for language in ("English", "French"):
+        prompt = synthesis._build_prompt("Invented transcript.", language)
+        assert f"in {language}" in prompt
+        order = ["Thesis and argument structure", "Overview", "Key points", "Facts and numbers", "Caveats"]
+        positions = [prompt.index(title) for title in order]
+        assert positions == sorted(positions)
+        for needle in ("[verifiable fact]", "[speaker interpretation]", "[unsupported claim]",
+                       "Implicit conclusion", "counter-argument"):
+            assert needle in prompt
+
+
+def test_prompt_sent_to_backend_contains_thesis_section(monkeypatch):
+    run = Mock(return_value=Mock(stdout="ok"))
+    monkeypatch.setattr(synthesis.subprocess, "run", run)
+    synthesis.synthesize("Invented transcript.", SynthesisConfig(backend="claude_cli"), "French")
+    assert "Thesis and argument structure" in run.call_args.kwargs["input"]

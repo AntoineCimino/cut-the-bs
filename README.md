@@ -18,6 +18,10 @@ PDFs are written to `output/` by default (created automatically). Choose a diffe
 
 Each run is also saved under `logs/` (change with `--log-dir`, disable with `--no-log`); logs are local, git-ignored, and may contain transcript content.
 
+### Summary structure
+
+Each summary starts with a "Thesis and argument structure" section (one-sentence thesis, 3-5 main arguments with their logical links and evidence tagged as verifiable fact / speaker interpretation / unsupported claim, the implicit conclusion, and the strongest counter-argument the speaker does not address). The detail sections follow: overview, key points, facts and numbers, caveats. Edit `src/prompts/synthesis.md` to change the structure.
+
 ### Output languages
 
 The tool always writes an English summary (`summary.pdf`). If the video's own captions are in another language, it also writes a second summary in that language (`summary.<lang-code>.pdf`, e.g. `summary.fr.pdf`) — both are generated from the same transcript. If the caption language is already English, only one file is produced.
